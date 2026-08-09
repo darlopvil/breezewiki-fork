@@ -176,11 +176,12 @@
       [online-styles
        (define styles
          (list
-          (format "~a/wikia.php?controller=ThemeApi&method=themeVariables&variant=~a" origin (user-cookies^-theme user-cookies))
-          (format "~a/load.php?lang=en&modules=site.styles%7Cskin.fandomdesktop.styles%7Cext.fandom.PortableInfoboxFandomDesktop.css%7Cext.fandom.GlobalComponents.CommunityHeaderBackground.css%7Cext.fandom.photoGallery.gallery.css%7Cext.gadget.site-styles%2Csound-styles&only=styles&skin=fandomdesktop" origin)))
-       (if (config-true? 'strict_proxy)
-           (map u-proxy-url styles)
-           styles)]
+          (format "~a/wikia.php?controller=ThemeApi&method=themeVariables&variant=~a" origin (user-cookies^-theme user-cookies))))
+       (append
+        (if (config-true? 'strict_proxy)
+            (map u-proxy-url styles)
+            styles)
+        (list "/static/fandom-skin.css"))]
       [#t
        (list
         (format "/archive/~a/styles/themeVariables-~a.css" wikiname (user-cookies^-theme user-cookies))

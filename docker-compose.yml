@@ -10,6 +10,7 @@ services:
       - ./config.ini:/app/config.ini
       - ./src:/app/src
       - ./lib:/app/lib
+      - ./static/fandom-skin.css:/app/static/fandom-skin.css
     networks:
       - nginx-proxy-manager_default
 

@@ -20,6 +20,9 @@ el patrón `wiki.fandom.com/es/wiki/...`), que el BreezeWiki original no maneja.
   sitio en vez del volcado de la petición.
 - **Configuración:** `strict_proxy` y `feature_jsonp=false` activados; locale UTF-8 en el
   contenedor (necesario para títulos con acentos).
+- **CSS de estructura servido localmente:** `src/application-globals.rkt` enlaza un
+  `static/fandom-skin.css` local en vez del `load.php` de Fandom (bloqueado por Cloudflare
+  desde IPs residenciales). Ver sección específica más abajo.
 
 ## Limitaciones conocidas
 
@@ -28,6 +31,24 @@ el patrón `wiki.fandom.com/es/wiki/...`), que el BreezeWiki original no maneja.
 - Las plantillas dinámicas de Fandom (ej. `<createbox>`) no se renderizan (limitación
   heredada del upstream).
 - El User-Agent de Firefox está fijado y envejecerá; revisar si reaparecen errores 403.
+
+## CSS del skin de Fandom (`static/fandom-skin.css`)
+
+Este fichero NO se incluye en el repositorio (es CSS propiedad de Fandom, no cubierto por
+la licencia de este fork). El servidor lo sirve localmente porque Fandom bloquea el
+`load.php` desde IPs residenciales (Cloudflare).
+
+Para generarlo, abre esta URL **en un navegador** (para pasar el challenge de Cloudflare)
+y guarda el resultado como `static/fandom-skin.css`:
+`https://<wiki>.fandom.com/load.php?lang=es&modules=site.styles%7Cskin.fandomdesktop.styles%7Cext.fandom.PortableInfoboxFandomDesktop.css%7Cext.fandom.GlobalComponents.CommunityHeaderBackground.css%7Cext.fandom.photoGallery.gallery.css&only=styles&skin=fandomdesktop`
+Después, elimina los `@import` internos (apuntan a recursos tras Cloudflare):
+
+```bash
+sed -i '/@import/d' static/fandom-skin.css
+```
+
+El fichero se monta en el contenedor vía bind-mount (ver `docker-compose.yml`) y se enlaza
+desde `src/application-globals.rkt`.
 
 ## Licencia
 
