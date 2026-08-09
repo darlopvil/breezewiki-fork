@@ -1,0 +1,15 @@
+# Copia este fichero a config.ini y ajusta los valores.
+
+# Dominio público de tu instancia (usado en User-Agent y validación de origen).
+canonical_origin = https://breezewiki.example.com
+
+debug = false
+port = 10416
+log_outgoing = false
+
+# Proxear TODO el CSS/imágenes por el servidor (privacidad + esquiva algunos bloqueos).
+strict_proxy = true
+
+# Render server-side en vez de JSONP en cliente (necesario para el soporte de idioma de este fork).
+[feature_jsonp]
+enabled = false

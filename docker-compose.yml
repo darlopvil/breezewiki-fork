@@ -1,0 +1,19 @@
+services:
+  breezewiki:
+    container_name: breezewiki_app
+    image: quay.io/pussthecatorg/breezewiki:latest
+    restart: unless-stopped
+    environment:
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+    volumes:
+      - ./config.ini:/app/config.ini
+      - ./src:/app/src
+      - ./lib:/app/lib
+    networks:
+      - nginx-proxy-manager_default
+
+networks:
+  nginx-proxy-manager_default:
+    external: true
+

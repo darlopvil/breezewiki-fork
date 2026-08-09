@@ -1,0 +1,88 @@
+#lang racket/base
+(require "../lib/syntax.rkt"
+         (for-syntax racket/base)
+         racket/string
+         net/url
+         web-server/http
+         web-server/dispatchers/dispatch
+         (prefix-in host: web-server/dispatchers/dispatch-host)
+         (prefix-in pathprocedure: web-server/dispatchers/dispatch-pathprocedure)
+         (prefix-in sequencer: web-server/dispatchers/dispatch-sequencer)
+         (prefix-in lift: web-server/dispatchers/dispatch-lift)
+         (prefix-in filter: web-server/dispatchers/dispatch-filter)
+         "config.rkt"
+         "../lib/url-utils.rkt")
+
+(provide
+ ; syntax to make the hashmap from names
+ dispatcher-tree
+ ; procedure to make the tree from the hashmap
+ make-dispatcher-tree)
+
+; make a hashmap out of the provided names and call make-dispatcher-tree with it
+(define-syntax (dispatcher-tree stx)
+  ; the arguments, which are names of dispatcher variables
+  (define names (cdr (syntax->list stx)))
+  ; map each name to syntax of a '(name . ,name)
+  (define alist (map (λ (xe) ; xe is the syntax of a name
+                       ; return instead syntax of a cons cell
+                       (datum->syntax stx `(cons ',xe ,xe)))
+                     names))
+  ; make syntax to make the hash
+  (define ds (datum->syntax stx `(make-hasheq (list ,@alist))))
+  ; don't forget that I'm returning *code* - return a call to the function
+  (datum->syntax stx `(make-dispatcher-tree ,ds)))
+
+; guard that the page returned a response, otherwise print more detailed debugging information
+(define-syntax-rule (page ds name)
+  (λ (req)
+    (define dispatcher (hash-ref ds (quote name)))
+    (define page-response (dispatcher req))
+    (if (response? page-response)
+        page-response
+        (response/output
+         #:code 500
+         #:mime-type #"text/plain"
+         (λ (out)
+           (for ([port (list (current-error-port) out)])
+             (parameterize ([current-output-port port])
+               (printf "error in ~a:~n  expected page to return a response~n  actually returned: ~v~n"
+                       (quote name)
+                       page-response))))))))
+
+(define (make-dispatcher-tree ds)
+  (define subdomain-dispatcher (hash-ref ds 'subdomain-dispatcher))
+  (define tree
+    (sequencer:make
+     subdomain-dispatcher
+     (pathprocedure:make "/buddyfight/wiki/It_Doesn't_Work!!" (page ds page-it-works))
+     (pathprocedure:make "/" (page ds page-home))
+     (filter:make #rx"^/static/" (hash-ref ds 'static-dispatcher))
+     (filter:make (pregexp "^/captcha/img/[0-9]+/[0-9]+$") (lift:make (page ds page-captcha-image)))
+     (filter:make (pregexp "^/captcha/verify/[0-9]+/[0-9]+/[0-9]+/[0-9]+$") (lift:make (page ds page-captcha-verify)))
+     (if (config-true? 'captcha::enabled)
+         (lift:make (page ds page-captcha))
+         (λ (_conn _req) (next-dispatcher)))
+     (pathprocedure:make "/proxy" (page ds page-proxy))
+     (pathprocedure:make "/search" (page ds page-global-search))
+     (pathprocedure:make "/set-user-settings" (page ds page-set-user-settings))
+     (filter:make (pregexp (format "^/~a/wiki/Category:.+$" px-wikiname)) (lift:make (page ds page-category)))
+     (filter:make (pregexp (format "^/~a/wiki/File:.+$" px-wikiname)) (lift:make (page ds page-file)))
+     (if (config-true? 'feature_offline::enabled)
+         (filter:make (pregexp (format "^/~a/wiki/.+$" px-wikiname)) (lift:make (page ds page-wiki-offline)))
+         (λ (_conn _req) (next-dispatcher)))
+     (filter:make (pregexp (format "^/~a/wiki/.+$" px-wikiname)) (lift:make (page ds page-wiki)))
+     (filter:make (pregexp (format "^/~a/~a/wiki/.+$" px-wikiname px-lang)) (lift:make (page ds page-wiki)))
+     (filter:make (pregexp (format "^/~a/search$" px-wikiname)) (lift:make (page ds page-search)))
+     (filter:make (pregexp (format "^/~a(/(wiki(/)?)?)?$" px-wikiname)) (lift:make (page ds redirect-wiki-home)))
+     (if (config-true? 'feature_offline::enabled)
+         (filter:make (pregexp (format "^/archive/~a/(styles|images)/.+$" px-wikiname)) (lift:make (page ds page-static-archive)))
+         (λ (_conn _req) (next-dispatcher)))
+     (hash-ref ds 'static-dispatcher)
+     (lift:make (hash-ref ds 'page-not-found))))
+  (make-semicolon-fixer-dispatcher tree))
+
+(define ((make-semicolon-fixer-dispatcher orig-dispatcher) conn orig-req)
+  (current-fandom-lang "") ; reset per request; page handlers re-set it when a lang segment is present
+  (define new-req (struct-copy request orig-req [uri (fix-semicolons-url (request-uri orig-req))]))
+  (orig-dispatcher conn new-req))
