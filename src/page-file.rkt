@@ -128,12 +128,26 @@
 (define-endpoint
   file-endpoint
   [variables
-   (define wikiname (path/param-path (first (url-path (request-uri req)))))
-   (define prefixed-file (path/param-path (caddr (url-path (request-uri req)))))
-   (define segments (map path/param-path (cdr (url-path (request-uri req)))))
+   (define all-segments (map path/param-path (url-path (request-uri req))))
+   (define wikiname (first all-segments))
+   ; detectar prefijo de idioma: si el 2º segmento no es "wiki", es un código de idioma
+   (define maybe-lang (and (>= (length all-segments) 2) (cadr all-segments)))
+   (define lang-path
+     (if (and maybe-lang (not (equal? maybe-lang "wiki")))
+         (format "/~a" maybe-lang)
+         ""))
+   (current-fandom-lang lang-path)
+   ; segmentos tras el marcador "wiki" (el título con su namespace)
+   (define after-wiki
+     (let loop ([segs (cdr all-segments)])
+       (cond [(null? segs) '()]
+             [(equal? (car segs) "wiki") (cdr segs)]
+             [else (loop (cdr segs))])))
+   (define prefixed-file (string-join after-wiki "/"))
+   (define segments after-wiki)
    (define title (url-segments->guess-title segments))
-   (define path (string-join (cdr segments) "/"))
-   (define source-url (format "https://~a.fandom.com/wiki/~a" wikiname prefixed-file))]
+   (define path (string-join segments "/"))
+   (define source-url (format "https://~a.fandom.com~a/wiki/~a" wikiname lang-path prefixed-file))]
   [endpoints
    (wikipage
     (("action" . "parse")
@@ -177,8 +191,11 @@
 (define-standard-handler (page-file-standard req)
   #'file-endpoint
   (when (equal? "missingtitle" (jp "/error/code" wikipage #f))
+    (next-dispatcher))
+  ; si no hay imageinfo, no es un archivo (ej. Categoría: en otro idioma que
+  ; entró por la ruta genérica de namespace) -> dejar que lo maneje page-wiki
+  (when (not (jp "/query/pages/0/imageinfo" imageinfo #f))
     (next-dispatcher)))
-
 (define-jsonp-handler (page-file-jsonp req)
   #'file-endpoint)
 

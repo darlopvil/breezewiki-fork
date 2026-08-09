@@ -68,6 +68,7 @@
      (pathprocedure:make "/set-user-settings" (page ds page-set-user-settings))
      (filter:make (pregexp (format "^/~a/wiki/Category:.+$" px-wikiname)) (lift:make (page ds page-category)))
      (filter:make (pregexp (format "^/~a/wiki/File:.+$" px-wikiname)) (lift:make (page ds page-file)))
+     (filter:make (pregexp (format "^/~a/~a/wiki/[^/]+:.+$" px-wikiname px-lang)) (lift:make (page ds page-file)))
      (if (config-true? 'feature_offline::enabled)
          (filter:make (pregexp (format "^/~a/wiki/.+$" px-wikiname)) (lift:make (page ds page-wiki-offline)))
          (λ (_conn _req) (next-dispatcher)))
