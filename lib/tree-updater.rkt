@@ -301,6 +301,14 @@
       ; remove customcollapsible customtoggle buttons - sample: warframe/wiki/Amp_(Ability)
       [(and (dict-has-key? attributes 'class) (regexp-match? #rx"^mw-customtoggle-[^ ]* button-c$" (car (dict-ref attributes 'class))))
        return-no-element]
+      ; replace broken gallery images (link to upload page) with a clean placeholder
+      ; sample: residentevil/es/wiki/Chris_Redfield_(Anderson) - "Chris-and-Claire-Redfield.jpg Wesker3.png"
+      [(and (eq? element-type 'a)
+            (has-class? "image-no-lightbox" attributes))
+       `(span
+         ((class "bw-missing-image")
+          (title ,(car (dict-ref attributes 'title '("")))))
+         ("Imagen no disponible"))]
       [#t
        (list element-type
              ;; attributes

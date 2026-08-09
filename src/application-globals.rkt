@@ -181,7 +181,7 @@
         (if (config-true? 'strict_proxy)
             (map u-proxy-url styles)
             styles)
-        (list "/static/fandom-skin.css"))]
+        (list "/static/fandom-skin.css" "/static/bw-custom.css"))]
       [#t
        (list
         (format "/archive/~a/styles/themeVariables-~a.css" wikiname (user-cookies^-theme user-cookies))
