@@ -26,8 +26,14 @@
  fandom-get-api
  timeouts)
 
+; Fandom devuelve 403 a cualquier User-Agent que contenga "BreezeWiki", asi que
+; nos presentamos como un Firefox real. Se usa una version ESR (Extended Support
+; Release) a proposito: los ESR salen ~1 vez al año, asi que este string envejece
+; despacio y no hay que tocarlo cada pocas semanas. Si algun dia Fandom empieza a
+; rechazarlo (poco probable: no validan version, solo bloquean UAs con "BreezeWiki"),
+; basta con subir el numero a un ESR mas reciente. Ultima actualizacion: Firefox 140 ESR.
 (current-user-agent
- "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0")
+ "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0")
 
 (define timeouts (make-timeout-config #:lease 5 #:connect 5))
 
