@@ -90,7 +90,10 @@
            [(list _ classes) classes]
            [_ (head-data^-body-class head-data-default)])
          (match (regexp-match #rx"<link rel=\"(?:shortcut )?icon\" href=\"([^\"]*)" head-html)
-           [(list _ icon-url) icon-url]
+           [(list _ icon-url)
+            (if (string-prefix? icon-url "https://")
+                icon-url
+                (head-data^-icon-url head-data-default))]
            [_ (head-data^-icon-url head-data-default)])))
       (set! this-data data))
     ;; then no matter what, return the best information we have so far
