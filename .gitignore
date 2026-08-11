@@ -4,7 +4,5 @@ compiled/
 config.ini
 req.rktd
 static/fandom-skin.css
-static/fandom-skin.css.bak
-static/fandom-skin.css.bak2
-docker-compose.yml.bak
-docker-compose.yml.bak2
+*.bak
+*.bak2

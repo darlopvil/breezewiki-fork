@@ -12,6 +12,7 @@ services:
       - ./lib:/app/lib
       - ./static/fandom-skin.css:/app/static/fandom-skin.css
       - ./static/bw-custom.css:/app/static/bw-custom.css
+      - ./static/fandom-mainpage.css:/app/static/fandom-mainpage.css
     networks:
       - nginx-proxy-manager_default
 
