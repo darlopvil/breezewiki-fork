@@ -30,6 +30,13 @@ el patrón `wiki.fandom.com/es/wiki/...`), que el BreezeWiki original no maneja.
 - **Placeholder para imágenes de galería rotas:** `lib/tree-updater.rkt` sustituye los enlaces
   de galería a imágenes inexistentes (que en Fandom llevan a la página de subir archivo, tras
   login) por un placeholder limpio, estilado en `static/bw-custom.css` (CSS propio, versionado).
+- **Columnas del main page (LCS/RCS):** el HTML de las portadas de Fandom usa el sistema de
+  columnas LCS (clases `main-page-tag-lcs-exploded`, `main-page-tag-rcs`), pero `fandom-skin.css`
+  no incluye esas reglas, así que las cajas se apilaban a todo el ancho. `static/fandom-mainpage.css`
+  (el módulo `ext.fandom.mainPageTag.css` de Fandom) aporta esas reglas y coloca las columnas.
+- **Favicon de fallback:** `src/data.rkt` detecta cuando una wiki no tiene favicon personalizado
+  (el `<link rel=icon>` apunta a una ruta interna de Fandom `/skins-ucp/...` en vez de una URL
+  absoluta) y cae al favicon propio de BreezeWiki en vez de dejar la ruta cruda (que daba 404).
 
 ## Limitaciones conocidas
 
@@ -60,6 +67,11 @@ sed -i '/@import/d' static/fandom-skin.css
 El fichero se monta en el contenedor vía bind-mount (ver `docker-compose.yml`) y se enlaza
 desde `src/application-globals.rkt`. En cambio, `static/bw-custom.css` (estilos propios del
 fork, como el placeholder de imagen no disponible) SÍ se versiona.
+
+`static/fandom-mainpage.css` también SÍ se versiona (a diferencia del skin grande): es pequeño,
+autocontenido y sin `@import`. Contiene solo las reglas de columnas del main page (LCS/RCS) y se
+genera con:
+`https://<wiki>.fandom.com/load.php?lang=en&modules=ext.fandom.mainPageTag.css&only=styles&skin=fandomdesktop`
 
 ## User-Agent
 
