@@ -30,6 +30,11 @@ el patrón `wiki.fandom.com/es/wiki/...`), que el BreezeWiki original no maneja.
 - **Placeholder para imágenes de galería rotas:** `lib/tree-updater.rkt` sustituye los enlaces
   de galería a imágenes inexistentes (que en Fandom llevan a la página de subir archivo, tras
   login) por un placeholder limpio, estilado en `static/bw-custom.css` (CSS propio, versionado).
+- **Pies de foto de galeria solapados:** en las galerias `wikia-gallery`, Fandom centra la
+  imagen dentro del `.thumb` (altura fija) empujando el `.gallery-image-wrapper` con un `top`
+  en linea, pero el `main.css` de BreezeWiki fuerza `.thumb { height:auto !important }` y el
+  `.thumb` colapsa sin contar ese `top`, dejando el `.lightbox-caption` solapado bajo la imagen.
+  Se neutraliza el `top` del wrapper (`top:0 !important`) en `static/bw-custom.css`.
 - **Columnas del main page (LCS/RCS):** el HTML de las portadas de Fandom usa el sistema de
   columnas LCS (clases `main-page-tag-lcs-exploded`, `main-page-tag-rcs`), pero `fandom-skin.css`
   no incluye esas reglas, así que las cajas se apilaban a todo el ancho. `static/fandom-mainpage.css`
