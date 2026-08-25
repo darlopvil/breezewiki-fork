@@ -19,3 +19,15 @@
   border: 1px dashed var(--theme-border-color, #555);
   border-radius: 3px;
 }
+
+/* Fix solapamiento de pies de foto en galerias wikia-gallery.
+   Fandom centra verticalmente la imagen dentro del .thumb (altura fija, p.ej. 187px)
+   empujando el .gallery-image-wrapper con position:relative; top:Npx. Pero el main.css
+   de BreezeWiki fuerza .thumb { height:auto !important }, asi que el .thumb colapsa a la
+   altura del wrapper SIN contar ese top (relative desplaza pero no reserva espacio):
+   la imagen se dibuja Npx mas abajo del final real del .thumb y el .lightbox-caption
+   (hermano siguiente) se le solapa. Neutralizamos el top para que la imagen quede en
+   flujo y el pie caiga limpio debajo. */
+.wikia-gallery-item .thumb .gallery-image-wrapper {
+  top: 0 !important;
+}
