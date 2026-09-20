@@ -42,6 +42,12 @@ el patrón `wiki.fandom.com/es/wiki/...`), que el BreezeWiki original no maneja.
 - **Favicon de fallback:** `src/data.rkt` detecta cuando una wiki no tiene favicon personalizado
   (el `<link rel=icon>` apunta a una ruta interna de Fandom `/skins-ucp/...` en vez de una URL
   absoluta) y cae al favicon propio de BreezeWiki en vez de dejar la ruta cruda (que daba 404).
+- **Bloque de categorías al pie del artículo:** Fandom muestra una caja "Categorías" al final
+  de cada artículo con enlaces a cada categoría, pero BreezeWiki no la pedía a la API y se perdía.
+  `src/page-wiki.rkt` añade `categories` al `prop` de la petición `parse` (en la misma petición
+  que ya se hace, sin tráfico extra a Fandom), filtra las categorías ocultas de mantenimiento
+  (como hace Fandom), y las enlaza a su página de categoría respetando el prefijo de idioma.
+  Estilado en `static/bw-custom.css`.
 
 ## Limitaciones conocidas
 
