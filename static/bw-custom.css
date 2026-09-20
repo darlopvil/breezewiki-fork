@@ -31,3 +31,36 @@
 .wikia-gallery-item .thumb .gallery-image-wrapper {
   top: 0 !important;
 }
+
+/* Bloque de categorias al pie del articulo (feature propia del fork, issue #6).
+   Fandom muestra una caja "Categorias" al final de cada articulo con enlaces a
+   cada categoria; BreezeWiki upstream no la pide a la API y la pierde. La pedimos
+   (prop=categories en page-wiki.rkt), filtramos las ocultas y la renderizamos aqui. */
+.bw-categories {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--theme-border-color, #333);
+}
+.bw-categories__title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.bw-categories__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bw-categories__item {
+  padding: 0 8px;
+  line-height: 1.25;
+}
+.bw-categories__item:not(:last-child) {
+  border-right: 1px solid var(--theme-border-color, #555);
+}
+.bw-categories__item:first-child {
+  padding-left: 0;
+}

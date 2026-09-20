@@ -19,6 +19,29 @@
 (provide
  page-wiki)
 
+; Genera el bloque de categorias al pie del articulo (como Fandom).
+; Recibe el jsexpr de /parse/categories, el wikiname y el lang-path (""/"/es"...).
+; Filtra las categorias ocultas (hidden), convierte los _ en espacios para mostrar,
+; y enlaza cada una a su pagina de categoria dentro de la instancia respetando el idioma.
+; Devuelve '() si no hay categorias visibles (para no renderizar la caja vacia).
+(define (categories->xexp cats wikiname lang-path)
+  (define visible
+    (if (list? cats)
+        (filter (lambda (cat) (not (dict-ref cat 'hidden #f))) cats)
+        '()))  ; #f o cualquier no-lista => sin categorias
+  (cond
+    [(null? visible) '()]
+    [else
+     `((div (@ (class "bw-categories"))
+            (h2 (@ (class "bw-categories__title")) "Categorías")
+            (ul (@ (class "bw-categories__list"))
+                ,@(for/list ([cat (in-list visible)])
+                    (define raw (dict-ref cat 'category ""))
+                    (define display (string-replace raw "_" " "))
+                    (define href (format "/~a~a/wiki/Category:~a" wikiname lang-path raw))
+                    `(li (@ (class "bw-categories__item"))
+                         (a (@ (href ,href)) ,display))))))]))
+
 (define-endpoint
   wiki-endpoint
   [variables
@@ -42,7 +65,7 @@
   [endpoints
    (wikipage (("action" . "parse")
               ("page" . ,path)
-              ("prop" . "text|headhtml|langlinks")
+              ("prop" . "text|headhtml|langlinks|categories")
               ("formatversion" . "2")
               ("format" . "json")))
    (siteinfo (("action" . "query")
@@ -53,10 +76,14 @@
   [render
    (define page-html (preprocess-html-wiki (jp "/parse/text" wikipage "")))
    (define page (html->xexp page-html))
+   ; Bloque de categorias al pie (como Fandom): se filtran las ocultas y se enlaza
+   ; cada una a su pagina de categoria respetando el prefijo de idioma.
+   (define categories-block
+     (categories->xexp (jp "/parse/categories" wikipage #f) wikiname (current-fandom-lang)))
    (define head-data ((head-data-getter wikiname) wikipage))
    (define body
      (generate-wiki-page
-      (update-tree-wiki page wikiname)
+      `(div ,(update-tree-wiki page wikiname) ,@categories-block)
       #:req req
       #:source-url source-url
       #:wikiname wikiname
