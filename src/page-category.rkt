@@ -41,7 +41,7 @@
    #:head-data head-data
    #:siteinfo siteinfo
    `(div
-     ,(update-tree-wiki page wikiname)
+     ,(update-tree-wiki page wikiname #:strict-proxy? (config-true? 'strict_proxy))
      (hr)
      (h2 ,(format "All Pages in ~a" title))
      (div (@ (class "mw-parser-output"))

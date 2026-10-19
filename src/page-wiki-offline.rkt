@@ -89,7 +89,7 @@
           [else initial-head-data]))
       (define body
         (generate-wiki-page
-         (update-tree-wiki page wikiname)
+         (update-tree-wiki page wikiname #:strict-proxy? (config-true? 'strict_proxy))
          #:req req
          #:source-url source-url
          #:wikiname wikiname

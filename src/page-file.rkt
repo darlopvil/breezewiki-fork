@@ -107,7 +107,7 @@
    `(div ,(get-media-html maybe-proxied-image-url (jp "/imageinfo/0" imageinfo-inner))
          (p (a (@ (href ,maybe-proxied-image-url)) "Download original file"))
          ,(if (pair? (jp "/parse/sections" wikipage))
-              (update-tree-wiki (html->xexp (preprocess-html-wiki (jp "/parse/text" wikipage ""))) wikiname)
+              (update-tree-wiki (html->xexp (preprocess-html-wiki (jp "/parse/text" wikipage ""))) wikiname #:strict-proxy? (config-true? 'strict_proxy))
               ; file license info wasn't displayed in the description (example: /lgbtqia/wiki/File:Rainbow_Flag1.svg)
               `(p "This file may be copyrighted. Consider licensing and fair use law before reusing it."))
          (p "Uploaded by "

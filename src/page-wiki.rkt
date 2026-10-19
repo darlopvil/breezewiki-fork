@@ -83,7 +83,7 @@
    (define head-data ((head-data-getter wikiname) wikipage))
    (define body
      (generate-wiki-page
-      `(div ,(update-tree-wiki page wikiname) ,@categories-block)
+      `(div ,(update-tree-wiki page wikiname #:strict-proxy? (config-true? 'strict_proxy)) ,@categories-block)
       #:req req
       #:source-url source-url
       #:wikiname wikiname
