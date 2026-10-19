@@ -89,10 +89,13 @@
 
 (: is-fandom-url? (String -> Boolean))
 (define (is-fandom-url? url)
-  (regexp-match? (pregexp (format "^https://static\\.wikia\\.nocookie\\.net/|^https://~a\\.fandom\\.com/" px-wikiname)) url))
+  (regexp-match? (pregexp (format "^https://[a-z0-9-]+\\.wikia\\.nocookie\\.net/|^https://~a\\.fandom\\.com/" px-wikiname)) url))
 (module+ test
   (check-true (is-fandom-url? "https://static.wikia.nocookie.net/wikiname/images/2/2f/SomeImage.jpg/revision/latest?cb=20110210094136"))
   (check-true (is-fandom-url? "https://test.fandom.com/wiki/Some_Page"))
+  (check-true (is-fandom-url? "https://vignette.wikia.nocookie.net/wikiname/images/a/ab/X.png"))
+  (check-true (is-fandom-url? "https://images.wikia.nocookie.net/wikiname/images/a/ab/X.png"))
+  (check-false (is-fandom-url? "https://evil.nocookie.net/x.png"))
   (check-false (is-fandom-url? "https://cadence.moe")))
 
 (: u-proxy-url (String -> String))
