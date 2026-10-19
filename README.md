@@ -48,6 +48,19 @@ el patrón `wiki.fandom.com/es/wiki/...`), que el BreezeWiki original no maneja.
   que ya se hace, sin tráfico extra a Fandom), filtra las categorías ocultas de mantenimiento
   (como hace Fandom), y las enlaza a su página de categoría respetando el prefijo de idioma.
   Estilado en `static/bw-custom.css`.
+- **Proxy de medios compatible con Cloudflare:** el CDN `static.wikia.nocookie.net` aplica el
+  challenge de Cloudflare y respondía 403 al proxy, que heredaba el User-Agent de Firefox de la
+  API. `src/page-proxy.rkt` elige la petición según el host: para `*.wikia.nocookie.net`, un UA
+  neutro con las cabeceras `Sec-Fetch-*`; para `fandom.com`, el UA de Firefox de siempre. Además,
+  las respuestas CSS que pasan por el proxy (el tema de la wiki) reescriben sus `url()` a
+  `/proxy?dest=...`, y `lib/url-utils.rkt` reconoce como de Fandom cualquier subdominio de
+  `wikia.nocookie.net` (`static.`, `vignette.`, `images.`), no solo `static.`.
+- **`strict_proxy` aplicado al contenido de los artículos:** `update-tree-wiki` sabe proxear
+  imágenes, pero ninguna página le pasaba el valor de `strict_proxy` (fallo heredado de
+  upstream), así que miniaturas, galerías e infobox se cargaban directamente desde Wikia aunque
+  la opción estuviera activada. `page-wiki`, `page-category`, `page-file` y `page-wiki-offline`
+  se lo pasan ahora. Con este arreglo y el anterior, el navegador del visitante no contacta
+  nunca con Wikia: todo el contenido multimedia sale de la propia instancia.
 
 ## Limitaciones conocidas
 
@@ -75,6 +88,22 @@ Después, elimina los `@import` internos (apuntan a recursos tras Cloudflare):
 sed -i '/@import/d' static/fandom-skin.css
 ```
 
+Por último, reescribe sus `url()` hacia el CDN de Wikia para que pasen por el proxy. Si no se
+hace, el navegador del visitante pide esas imágenes directamente a Wikia, saltándose
+`strict_proxy`:
+
+```bash
+python3 - << 'EOF'
+import re, urllib.parse
+p = "static/fandom-skin.css"
+c = open(p, encoding="utf-8").read()
+rx = re.compile(r"url\(\s*['\"]?(https://[a-z0-9-]+\.wikia\.nocookie\.net/[^)'\"]*)['\"]?\s*\)")
+c, n = rx.subn(lambda m: "url(/proxy?dest=" + urllib.parse.quote(m.group(1), safe="") + ")", c)
+open(p, "w", encoding="utf-8").write(c)
+print(n, "url() reescritas")
+EOF
+```
+
 El fichero se monta en el contenedor vía bind-mount (ver `docker-compose.yml`) y se enlaza
 desde `src/application-globals.rkt`. En cambio, `static/bw-custom.css` (estilos propios del
 fork, como el placeholder de imagen no disponible) SÍ se versiona.
@@ -92,6 +121,12 @@ Release), que se publica ~una vez al año, de modo que el string envejece despac
 tocarlo cada pocas semanas. Fandom no valida la versión concreta del navegador (solo bloquea
 UAs identificables como bots), así que el riesgo de caducidad es bajo; si algún día reaparecen
 errores 403, subir el número a un ESR más reciente es lo primero a probar.
+
+El proxy de medios (`src/page-proxy.rkt`) necesita lo contrario para el CDN de imágenes
+(`*.wikia.nocookie.net`): ahí Cloudflare da 403 al UA de Firefox cuando no llega acompañado del
+resto de cabeceras de un navegador real, y deja pasar un UA neutro con las cabeceras
+`Sec-Fetch-*`. Por eso el proxy usa su propio UA solo para esos hosts y mantiene el de Firefox
+para `fandom.com`.
 
 ## Licencia
 
